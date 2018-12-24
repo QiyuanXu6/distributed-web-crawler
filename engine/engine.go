@@ -28,6 +28,9 @@ func Run(seeds ...Request) {
 			log.Print("Items %v", item)
 
 		}
-
 	}
+}
+
+func worker() {
+
 }
