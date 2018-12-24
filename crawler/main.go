@@ -8,6 +8,11 @@ import (
 )
 
 func main() {
+	engine.Run(engine.Request{
+		Url: "https://www.zhenai.com/zhenghun",
+		ParserFunc: parser.ParseCityList,
+	})
+
 	request, err := http.NewRequest(http.MethodGet, "https://www.zhenai.com/zhenghun", nil)
 	if err != nil {
 		panic(err)
