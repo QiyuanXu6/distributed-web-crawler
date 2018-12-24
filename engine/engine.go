@@ -1,6 +1,9 @@
 package engine
 
-import "log"
+import (
+	"log"
+	"web-crawler/fetcher"
+)
 
 func Run(seeds ...Request) {
 	var requests []Request
