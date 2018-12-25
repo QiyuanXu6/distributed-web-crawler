@@ -14,18 +14,19 @@ type ConcurrentEngine struct {
 type Scheduler interface {
 	Submit(Request)
 	ConfigureMasterWorkerChan(chan Request)
+	WorkerReady(chan Request)
+	Run()
 }
 
-func (engine *ConcurrentEngine) Run(seeds ...Request) {
+func (e *ConcurrentEngine) Run(seeds ...Request) {
 
-	in := make(chan Request)
 	out := make(chan ParseResult)
-	engine.Scheduler.ConfigureMasterWorkerChan(in)
-	for i := 0; i < engine.WorkerCount; i++ {
-		engine.createWorker(in, out)
+	e.Scheduler.Run()
+	for i := 0; i < e.WorkerCount; i++ {
+		e.createWorker(out, e.Scheduler)
 	}
 	for _, r := range seeds {
-		engine.Scheduler.Submit(r)
+		e.Scheduler.Submit(r)
 	}
 
 	for  {
@@ -37,7 +38,7 @@ func (engine *ConcurrentEngine) Run(seeds ...Request) {
 		}
 		// Submit all result.requests to scheduler
 		for _, request := range result.Requests {
-			engine.Scheduler.Submit(request)
+			e.Scheduler.Submit(request)
 		}
 		fmt.Printf("finshed submit\n")
 	}
@@ -46,9 +47,13 @@ func (engine *ConcurrentEngine) Run(seeds ...Request) {
 
 // Create one goroutine: contains one worker, get from in chan, output into out chan
 // Channels the only thing about the worker
-func (engine *ConcurrentEngine) createWorker(in chan Request, out chan ParseResult) {
+func (engine *ConcurrentEngine) createWorker(out chan ParseResult, s Scheduler) {
+	in := make(chan Request)
 	go func() {
 		for {
+			// tell scheduler I am ready to get new requests from scheduler
+			s.WorkerReady(in)
+
 			request := <-in
 			result, err := engine.worker(request)
 			if err != nil {
