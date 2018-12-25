@@ -4,7 +4,7 @@ type DedupService struct {
 	seen map[string]bool
 }
 
-func NewDedupService()  *DedupService {
+func NewDedupService() *DedupService {
 	return &DedupService{
 		seen: make(map[string]bool),
 	}

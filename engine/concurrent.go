@@ -10,7 +10,7 @@ type ConcurrentEngine struct {
 	Scheduler Scheduler
 	WorkerCount int
 	DedupService DedupService
-
+	ItemChan chan interface{}
 }
 
 type Scheduler interface {
@@ -46,7 +46,11 @@ func (e *ConcurrentEngine) Run(seeds ...Request) {
 		// Print out the result.items
 		for _, item := range result.Items {
 			fmt.Printf("Got item %v\n", item)
+			go func() {
+				e.ItemChan <- item
+			}()
 		}
+
 		// Submit all result.requests to scheduler
 		for _, request := range result.Requests {
 			if e.DedupService.isDup(request.Url) {
