@@ -13,9 +13,15 @@ type ConcurrentEngine struct {
 
 type Scheduler interface {
 	Submit(Request)
-	ConfigureMasterWorkerChan(chan Request)
-	WorkerReady(chan Request)
+	//ConfigureMasterWorkerChan(chan Request)
+	WorkerChan() chan Request // Get In channel from Scheduler
+	ReadyNotifier
 	Run()
+}
+
+// Ducking typing: don't need to implement this interface
+type ReadyNotifier interface {
+	WorkerReady(chan Request)
 }
 
 func (e *ConcurrentEngine) Run(seeds ...Request) {
@@ -23,7 +29,7 @@ func (e *ConcurrentEngine) Run(seeds ...Request) {
 	out := make(chan ParseResult)
 	e.Scheduler.Run()
 	for i := 0; i < e.WorkerCount; i++ {
-		e.createWorker(out, e.Scheduler)
+		e.createWorker(e.Scheduler.WorkerChan(), out, e.Scheduler)
 	}
 	for _, r := range seeds {
 		e.Scheduler.Submit(r)
@@ -47,12 +53,11 @@ func (e *ConcurrentEngine) Run(seeds ...Request) {
 
 // Create one goroutine: contains one worker, get from in chan, output into out chan
 // Channels the only thing about the worker
-func (engine *ConcurrentEngine) createWorker(out chan ParseResult, s Scheduler) {
-	in := make(chan Request)
+func (engine *ConcurrentEngine) createWorker(in chan Request, out chan ParseResult, ready ReadyNotifier) {
 	go func() {
 		for {
 			// tell scheduler I am ready to get new requests from scheduler
-			s.WorkerReady(in)
+			ready.WorkerReady(in)
 
 			request := <-in
 			result, err := engine.worker(request)
