@@ -9,6 +9,8 @@ import (
 type ConcurrentEngine struct {
 	Scheduler Scheduler
 	WorkerCount int
+	DedupService DedupService
+
 }
 
 type Scheduler interface {
@@ -32,6 +34,9 @@ func (e *ConcurrentEngine) Run(seeds ...Request) {
 		e.createWorker(e.Scheduler.WorkerChan(), out, e.Scheduler)
 	}
 	for _, r := range seeds {
+		if e.DedupService.isDup(r.Url) {
+			continue
+		}
 		e.Scheduler.Submit(r)
 	}
 
@@ -44,6 +49,9 @@ func (e *ConcurrentEngine) Run(seeds ...Request) {
 		}
 		// Submit all result.requests to scheduler
 		for _, request := range result.Requests {
+			if e.DedupService.isDup(request.Url) {
+				continue
+			}
 			e.Scheduler.Submit(request)
 		}
 		fmt.Printf("finshed submit\n")
