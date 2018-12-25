@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"regexp"
 	"web-crawler/engine"
 )
@@ -13,13 +14,15 @@ func ParseCity(content []byte) engine.ParseResult {
 	all := reg.FindAllSubmatch(content, -1)
 
 	result := engine.ParseResult{}
-	limit := 5
+	fmt.Println("city list: ", len(all))
+	limit := 10
 	for _, m := range all {
-		result.Items = append(result.Items, string(m[2]))
+		name := string(m[2])
+		result.Items = append(result.Items, name)
 		result.Requests = append(result.Requests, engine.Request{
 			Url: string(m[1]),
 			ParserFunc: func(bytes []byte) engine.ParseResult {
-				return ParseProfile(bytes, string(m[2]))
+				return ParseProfile(bytes, name)
 			},
 		})
 		limit--

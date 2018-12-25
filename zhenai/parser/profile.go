@@ -39,6 +39,5 @@ func ParseProfile(content []byte, name string) engine.ParseResult {
 	result := engine.ParseResult{
 		Items: []interface{}{profile},
 	}
-	fmt.Println("value %v\n", result.Items[0])
 	return result
 }
