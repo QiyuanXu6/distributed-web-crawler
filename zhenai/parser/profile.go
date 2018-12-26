@@ -10,7 +10,8 @@ import (
 
 
 const jsonRe = `window\.__INITIAL_STATE__=(.+);\(function\(\){var s;`
-func ParseProfile(content []byte, name string) engine.ParseResult {
+var idRe = regexp.MustCompile(`http://album.zhenai.com/u/([\d]+)`)
+func ParseProfile(content []byte, name string, url string) engine.ParseResult {
 	re := regexp.MustCompile(jsonRe)
 
 	profile := model.Profile{}
@@ -36,8 +37,17 @@ func ParseProfile(content []byte, name string) engine.ParseResult {
 		profile.Salary = objectInfo["salaryString"].(string)
 
 	}
+
+	id := string(idRe.FindSubmatch([]byte(url))[1])
 	result := engine.ParseResult{
-		Items: []interface{}{profile},
+		Items: []engine.Item{
+			{
+				Url: url,
+				Type: "zhenai",
+				Id: id,
+				Payload: profile,
+			},
+		},
 	}
 	return result
 }

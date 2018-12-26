@@ -1,21 +1,14 @@
 package main
 
 import (
+	"web-crawler/crawler_distributed/persist/client"
 	"web-crawler/engine"
-	"web-crawler/persist"
 	"web-crawler/scheduler"
 	"web-crawler/zhenai/parser"
 )
 
 func main() {
-	//e := engine.SimpleEngine{}
-	//e.Run(engine.Request{
-	//	Url: "https://www.zhenai.com/zhenghun",
-	//	ParserFunc: parser.ParseCityList,
-	//})
-	// Why I need & and * sign here?
-
-	itemchan, err := persist.ItemSaver()
+	itemchan, err := client.ItemSaver(":1234")
 	if err != nil {
 		panic(err)
 	}
@@ -34,7 +27,4 @@ func main() {
 		Url: "http://www.zhenai.com/zhenghun/shanghai",
 		ParserFunc: parser.ParseCity,
 	})
-
 }
-
-

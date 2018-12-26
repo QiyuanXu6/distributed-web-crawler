@@ -10,7 +10,7 @@ type ConcurrentEngine struct {
 	Scheduler Scheduler
 	WorkerCount int
 	DedupService DedupService
-	ItemChan chan interface{}
+	ItemChan chan Item
 }
 
 type Scheduler interface {

@@ -21,11 +21,11 @@ func ParseCity(content []byte) engine.ParseResult {
 	limit := 10
 	for _, m := range all {
 		name := string(m[2])
-		result.Items = append(result.Items, name)
+		//result.Items = append(result.Items, name)
 		result.Requests = append(result.Requests, engine.Request{
 			Url: string(m[1]),
 			ParserFunc: func(bytes []byte) engine.ParseResult {
-				return ParseProfile(bytes, name)
+				return ParseProfile(bytes, name, string(m[1]))
 			},
 		})
 		limit--
