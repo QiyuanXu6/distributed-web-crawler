@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"web-crawler/crawler_distributed/config"
 	"web-crawler/engine"
 	"web-crawler/model"
 )
@@ -11,7 +12,7 @@ import (
 
 const jsonRe = `window\.__INITIAL_STATE__=(.+);\(function\(\){var s;`
 var idRe = regexp.MustCompile(`http://album.zhenai.com/u/([\d]+)`)
-func ParseProfile(content []byte, name string, url string) engine.ParseResult {
+func parseProfile(content []byte, name string, url string) engine.ParseResult {
 	re := regexp.MustCompile(jsonRe)
 
 	profile := model.Profile{}
@@ -50,4 +51,23 @@ func ParseProfile(content []byte, name string, url string) engine.ParseResult {
 		},
 	}
 	return result
+}
+
+// Implement Parser interface
+type ProfileParser struct {
+	userName string
+}
+
+func (p *ProfileParser) Parse(contents []byte, url string) engine.ParseResult {
+	return parseProfile(contents, p.userName, url)
+}
+
+func (p *ProfileParser) Serialize() (name string, args interface{}) {
+	return config.ParseProfile, p.userName
+}
+
+func NewProfileParser(userName string) *ProfileParser {
+	return &ProfileParser{
+		userName: userName,
+	}
 }

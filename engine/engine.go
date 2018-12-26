@@ -38,5 +38,5 @@ func (SimpleEngine) worker(request Request) (ParseResult, error) {
 		log.Printf("error fetch in url %s: %v", request.Url, err)
 		return ParseResult{}, err
 	}
-	return request.ParserFunc(body), nil
+	return request.Parser.Parse(body, request.Url), nil
 }

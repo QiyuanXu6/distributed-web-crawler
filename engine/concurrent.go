@@ -11,7 +11,10 @@ type ConcurrentEngine struct {
 	WorkerCount int
 	DedupService DedupService
 	ItemChan chan Item
+	RequestProcessor Processor
 }
+
+type Processor func(Request) (ParseResult, error)
 
 type Scheduler interface {
 	Submit(Request)
@@ -65,14 +68,19 @@ func (e *ConcurrentEngine) Run(seeds ...Request) {
 
 // Create one goroutine: contains one worker, get from in chan, output into out chan
 // Channels the only thing about the worker
-func (engine *ConcurrentEngine) createWorker(in chan Request, out chan ParseResult, ready ReadyNotifier) {
+func (e *ConcurrentEngine) createWorker(in chan Request, out chan ParseResult, ready ReadyNotifier) {
+	// work count => how many instance of this goroutine
 	go func() {
 		for {
 			// tell scheduler I am ready to get new requests from scheduler
 			ready.WorkerReady(in)
 
 			request := <-in
-			result, err := engine.worker(request)
+
+			// Call RPC worker
+			result, err := e.RequestProcessor(request)
+
+			//result, err := engine.Worker(request)
 			if err != nil {
 				continue
 			}
@@ -81,7 +89,7 @@ func (engine *ConcurrentEngine) createWorker(in chan Request, out chan ParseResu
 	}()
 }
 
-func (ConcurrentEngine) worker(request Request) (ParseResult, error) {
+func (ConcurrentEngine) Worker(request Request) (ParseResult, error) {
 	log.Printf("Fetching %s", request.Url)
 	body, err := fetcher.Fetch(request.Url)
 	if err != nil {
@@ -89,5 +97,5 @@ func (ConcurrentEngine) worker(request Request) (ParseResult, error) {
 		return ParseResult{}, err
 	}
 	log.Printf("Fetching %s succeed", request.Url)
-	return request.ParserFunc(body), nil
+	return request.Parser.Parse(body, request.Url), nil
 }

@@ -3,17 +3,16 @@ package parser
 import (
 	"fmt"
 	"regexp"
+	"web-crawler/crawler_distributed/config"
 	"web-crawler/engine"
 )
-
-
 
 var (
 	profileRe = regexp.MustCompile(`<tr><th><a href="(http://album.zhenai.com/u/[0-9]+)" target="_blank">([^<]+)</a></th></tr>`)
 	cityUrlRe = regexp.MustCompile(`href="(http://www.zhenai.com/zhenghun/shanghai/[^"]+)"`)
 )
 
-func ParseCity(content []byte) engine.ParseResult {
+func ParseCity(content []byte, url string) engine.ParseResult {
 	all := profileRe.FindAllSubmatch(content, -1)
 
 	result := engine.ParseResult{}
@@ -24,9 +23,7 @@ func ParseCity(content []byte) engine.ParseResult {
 		//result.Items = append(result.Items, name)
 		result.Requests = append(result.Requests, engine.Request{
 			Url: string(m[1]),
-			ParserFunc: func(bytes []byte) engine.ParseResult {
-				return ParseProfile(bytes, name, string(m[1]))
-			},
+			Parser: NewProfileParser(name),
 		})
 		limit--
 		if limit < 0 {
@@ -39,7 +36,7 @@ func ParseCity(content []byte) engine.ParseResult {
 		result.Requests = append(result.Requests,
 			engine.Request{
 				Url: string(m[1]),
-				ParserFunc: ParseCity,
+				Parser: engine.NewFuncParser(ParseCity, config.ParseCity),
 			})
 	}
 	return result
