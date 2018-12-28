@@ -3,3 +3,4 @@ elasticsearch:
   container_name: web-crawler-elasticsearch
   ports:
     - "9200:9200"
+
